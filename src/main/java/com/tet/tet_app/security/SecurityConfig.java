@@ -1,13 +1,11 @@
-package com.tet.tet_app.config;
+package com.tet.tet_app.security;
 
-import com.tet.tet_app.filter.JwtAuthenticationFilter;
-import com.tet.tet_app.service.CustomOAuth2UserService;
+import com.tet.tet_app.security.oauth.OAuth2AuthenticationSuccessHandler;
+import com.tet.tet_app.security.jwt.JwtAuthenticationFilter;
+import com.tet.tet_app.security.oauth.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,7 +35,7 @@ public class SecurityConfig {
 
                         // Share link lời chúc
                         .requestMatchers("/api/wishes/share/**").permitAll()
-
+                        .requestMatchers("/api/profile/**").hasRole("USER")
                         // Tất cả còn lại cần token
                         .anyRequest().authenticated()
                 )

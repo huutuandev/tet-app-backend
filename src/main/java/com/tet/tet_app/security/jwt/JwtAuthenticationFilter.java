@@ -1,7 +1,6 @@
-package com.tet.tet_app.filter;
+package com.tet.tet_app.security.jwt;
 
-import com.tet.tet_app.service.JwtService;
-import com.tet.tet_app.service.UserDetailsServiceImpl;
+import com.tet.tet_app.security.user.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,6 +1,7 @@
-package com.tet.tet_app.service;
+package com.tet.tet_app.security.oauth;
 
 import com.tet.tet_app.entity.User;
+import com.tet.tet_app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

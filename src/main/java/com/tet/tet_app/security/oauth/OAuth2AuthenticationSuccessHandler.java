@@ -1,12 +1,7 @@
-package com.tet.tet_app.config;
+package com.tet.tet_app.security.oauth;
 
-import com.tet.tet_app.entity.Role;
 import com.tet.tet_app.entity.User;
-import com.tet.tet_app.entity.Wallet;
-import com.tet.tet_app.repository.RoleRepository;
-import com.tet.tet_app.repository.UserRepository;
-import com.tet.tet_app.repository.WalletRepository;
-import com.tet.tet_app.service.JwtService;
+import com.tet.tet_app.security.jwt.JwtService;
 import com.tet.tet_app.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

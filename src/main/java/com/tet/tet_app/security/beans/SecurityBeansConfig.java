@@ -1,4 +1,4 @@
-package com.tet.tet_app.config;
+package com.tet.tet_app.security.beans;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
