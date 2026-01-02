@@ -31,7 +31,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String picture = oAuth2User.getAttribute("picture");
 
         // Đăng ký hoặc lấy user từ DB
-        User user = userService.registerOrLoginGoogle(googleId, email, name, picture);
+        User user = userService.registerOrGetGoogleUser(googleId, email, name, picture);
 
         // Tạo authorities từ roles
         Set<GrantedAuthority> authorities = new HashSet<>();

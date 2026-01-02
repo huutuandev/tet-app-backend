@@ -7,6 +7,7 @@ import com.tet.tet_app.repository.RoleRepository;
 import com.tet.tet_app.repository.UserRepository;
 import com.tet.tet_app.repository.WalletRepository;
 import com.tet.tet_app.service.JwtService;
+import com.tet.tet_app.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,7 @@ public class OAuth2AuthenticationSuccessHandler
         extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final WalletRepository walletRepository;
+    private final UserService userService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -39,32 +38,7 @@ public class OAuth2AuthenticationSuccessHandler
         String googleId = oAuth2User.getAttribute("sub");
         String avatar = oAuth2User.getAttribute("picture");
 
-        // 1️⃣ Tìm hoặc tạo user
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .email(email)
-                            .fullName(name)
-                            .googleId(googleId)
-                            .avatarUrl(avatar)
-                            .build();
-
-                    // gán ROLE_USER
-                    Role roleUser = roleRepository.findByName("ROLE_USER")
-                            .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
-                    newUser.getRoles().add(roleUser);
-
-                    User savedUser = userRepository.save(newUser);
-
-                    // tạo wallet
-                    Wallet wallet = Wallet.builder()
-                            .user(savedUser)
-                            .balance(100)
-                            .build();
-                    walletRepository.save(wallet);
-
-                    return savedUser;
-                });
+        User user = userService.registerOrGetGoogleUser(googleId, email, name, avatar);
 
         // 2️⃣ Generate JWT
         String token = jwtService.generateTokenFromEmail(user.getEmail());

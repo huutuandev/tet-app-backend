@@ -21,16 +21,20 @@ public class AuthenticationController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        User user = userService.registerUser(request.getEmail(), request.getPassword(), request.getFullName());
-        String jwt = authService.generateJwtForUser(user);
-        return ResponseEntity.ok(new AuthResponse(jwt, user.getId(), user.getFullName(), user.getAvatarUrl()));
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            return ResponseEntity.ok(userService.registerUser(request.getEmail(), request.getPassword(), request.getFullName()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        String jwt = authService.login(request.getEmail(), request.getPassword());
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-        return ResponseEntity.ok(new AuthResponse(jwt, user.getId(), user.getFullName(), user.getAvatarUrl()));
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            return ResponseEntity.ok(authService.login(request.getEmail(), request.getPassword()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
