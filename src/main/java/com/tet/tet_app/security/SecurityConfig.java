@@ -35,7 +35,8 @@ public class SecurityConfig {
 
                         // Share link lời chúc
                         .requestMatchers("/api/wishes/share/**").permitAll()
-                        .requestMatchers("/api/profile/**").hasRole("USER")
+                        .requestMatchers("/api/profile/**",
+                                "/api/lucky-draw/**").hasRole("USER")
                         // Tất cả còn lại cần token
                         .anyRequest().authenticated()
                 )

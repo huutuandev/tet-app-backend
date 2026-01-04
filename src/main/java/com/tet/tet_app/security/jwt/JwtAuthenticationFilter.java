@@ -1,11 +1,14 @@
 package com.tet.tet_app.security.jwt;
 
 import com.tet.tet_app.security.user.UserDetailsServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.security.SignatureException;
 
 @Component
 @RequiredArgsConstructor
@@ -34,7 +38,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail = jwtService.extractUsername(jwt);
+        String userEmail;
+
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (ExpiredJwtException ex) {
+            writeError(response, HttpStatus.UNAUTHORIZED, "Token expired", "Phiên đăng nhập đã hết hạn");
+            return;
+        } catch (MalformedJwtException ex) {
+            writeError(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Token không hợp lệ");
+            return;
+        } catch (Exception ex) {
+            writeError(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Token không hợp lệ");
+            return;
+        }
+
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -48,4 +66,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
+    private void writeError(HttpServletResponse response,
+                            HttpStatus status,
+                            String error,
+                            String message) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType("application/json;charset=UTF-8");
+
+        String body = """
+        {
+          "status": %d,
+          "error": "%s",
+          "message": "%s"
+        }
+        """.formatted(status.value(), error, message);
+
+        response.getWriter().write(body);
+    }
+
 }

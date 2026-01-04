@@ -21,20 +21,12 @@ public class AuthenticationController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
+    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
             return ResponseEntity.ok(userService.registerUser(request.getEmail(), request.getPassword(), request.getFullName()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
             return ResponseEntity.ok(authService.login(request.getEmail(), request.getPassword()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 }
