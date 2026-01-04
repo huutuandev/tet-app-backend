@@ -1,6 +1,7 @@
 package com.tet.tet_app.service;
 
 import com.tet.tet_app.dto.request.WishCreateRequest;
+import com.tet.tet_app.dto.request.WishUpdateRequest;
 import com.tet.tet_app.dto.response.WishResponse;
 import com.tet.tet_app.entity.Wish;
 import com.tet.tet_app.repository.WishRepository;
@@ -28,9 +29,9 @@ public class WishService {
                 .senderId(currentUser.getId())
                 .receiverId(request.getReceiverId())
                 .content(request.getContent())
-                .isPrivate(request.isPrivate())
+                .isPrivate(request.getIsPrivate())
                 .shareToken(
-                        request.isEnableShare()
+                        request.getEnableShare()
                                 ? UUID.randomUUID().toString()
                                 : null
                 )
@@ -61,6 +62,50 @@ public class WishService {
 
         return toResponse(wish);
     }
+    public WishResponse updateWish(
+            Long wishId,
+            Long currentUserId,
+            WishUpdateRequest request
+    ) {
+        Wish wish = wishRepository.findById(wishId)
+                .orElseThrow(() -> new RuntimeException("Wish not found"));
+
+        if (!wish.getSenderId().equals(currentUserId)) {
+            throw new RuntimeException("No permission");
+        }
+
+        // 📝 Update content
+        if (request.getContent() != null) {
+            wish.setContent(request.getContent());
+        }
+
+        // 🔐 Update private
+        if (request.getIsPrivate() != null) {
+            wish.setPrivate(request.getIsPrivate());
+
+            // Nếu chuyển sang private → tắt share
+            if (request.getIsPrivate()) {
+                wish.setShareToken(null);
+            }
+        }
+
+        // 🔁 Update share
+        if (request.getEnableShare() != null) {
+            if (request.getEnableShare()) {
+                if (wish.isPrivate()) {
+                    throw new RuntimeException("Private wish cannot be shared");
+                }
+                if (wish.getShareToken() == null) {
+                    wish.setShareToken(UUID.randomUUID().toString());
+                }
+            } else {
+                wish.setShareToken(null);
+            }
+        }
+
+        return toResponse(wishRepository.save(wish));
+    }
+
 
     // 🔗 SHARE
     public WishResponse getWishByShareToken(String token) {

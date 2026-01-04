@@ -1,6 +1,7 @@
 package com.tet.tet_app.controller;
 
 import com.tet.tet_app.dto.request.WishCreateRequest;
+import com.tet.tet_app.dto.request.WishUpdateRequest;
 import com.tet.tet_app.dto.response.WishResponse;
 import com.tet.tet_app.security.user.CustomUserDetails;
 import com.tet.tet_app.service.WishService;
@@ -43,6 +44,15 @@ public class WishController {
     ) {
         return wishService.getWishById(id, currentUser.getId());
     }
+    @PutMapping("/{id}")
+    public WishResponse updateWish(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestBody WishUpdateRequest request
+    ) {
+        return wishService.updateWish(id, currentUser.getId(), request);
+    }
+
 
     // 🔗 Share
     @GetMapping("/share/{token}")

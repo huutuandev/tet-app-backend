@@ -13,7 +13,7 @@ public class WishResponse {
     private Long senderId;
     private Long receiverId;
     private String content;
-    private boolean isPrivate;
+    private Boolean isPrivate;
     private String shareToken;
     private LocalDateTime createdAt;
 }
