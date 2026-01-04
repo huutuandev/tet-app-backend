@@ -26,15 +26,6 @@ public class WishController {
         return wishService.createWish(currentUser, request);
     }
 
-    // 📥 Hộp thư đến
-    @GetMapping("/inbox")
-    public Page<WishResponse> inbox(
-            @AuthenticationPrincipal CustomUserDetails currentUser,
-            Pageable pageable
-    ) {
-        return wishService.getInbox(currentUser.getId(), pageable);
-    }
-
     // 📤 Đã gửi
     @GetMapping("/sent")
     public Page<WishResponse> sent(

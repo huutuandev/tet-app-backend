@@ -40,13 +40,6 @@ public class WishService {
         return toResponse(wishRepository.save(wish));
     }
 
-    // 📥 INBOX
-    public Page<WishResponse> getInbox(Long userId, Pageable pageable) {
-        return wishRepository
-                .findByReceiverId(userId, pageable)
-                .map(this::toResponse);
-    }
-
     // 📤 SENT
     public Page<WishResponse> getSent(Long userId, Pageable pageable) {
         return wishRepository
