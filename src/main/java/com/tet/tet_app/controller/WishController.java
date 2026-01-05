@@ -33,7 +33,7 @@ public class WishController {
             @AuthenticationPrincipal CustomUserDetails currentUser,
             Pageable pageable
     ) {
-        return wishService.getSent(currentUser.getId(), pageable);
+        return wishService.getSent(currentUser.getUser().getId(), pageable);
     }
 
     // 🔍 Chi tiết
@@ -42,7 +42,7 @@ public class WishController {
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
-        return wishService.getWishById(id, currentUser.getId());
+        return wishService.getWishById(id, currentUser.getUser().getId());
     }
     @PutMapping("/{id}")
     public WishResponse updateWish(
@@ -50,7 +50,7 @@ public class WishController {
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestBody WishUpdateRequest request
     ) {
-        return wishService.updateWish(id, currentUser.getId(), request);
+        return wishService.updateWish(id, currentUser.getUser().getId(), request);
     }
 
 
@@ -66,6 +66,6 @@ public class WishController {
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
-        wishService.deleteWish(id, currentUser.getId());
+        wishService.deleteWish(id, currentUser.getUser().getId());
     }
 }

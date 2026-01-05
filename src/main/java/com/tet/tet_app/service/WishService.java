@@ -26,7 +26,7 @@ public class WishService {
             WishCreateRequest request
     ) {
         Wish wish = Wish.builder()
-                .senderId(currentUser.getId())
+                .senderId(currentUser.getUser().getId())
                 .receiverId(request.getReceiverId())
                 .content(request.getContent())
                 .isPrivate(request.getIsPrivate())
