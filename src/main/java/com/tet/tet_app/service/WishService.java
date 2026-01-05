@@ -109,10 +109,28 @@ public class WishService {
 
     // 🔗 SHARE
     public WishResponse getWishByShareToken(String token) {
+
+        // ❌ Token rỗng / null
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException("Share token is empty");
+        }
+
         Wish wish = wishRepository.findByShareToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid share token"));
+
+        // 🔐 Không cho share nếu là private
+        if (wish.isPrivate()) {
+            throw new RuntimeException("This wish is private");
+        }
+
+        // ❌ Token bị revoke
+        if (wish.getShareToken() == null) {
+            throw new RuntimeException("Share link is disabled");
+        }
+
         return toResponse(wish);
     }
+
 
     // 🗑 DELETE
     public void deleteWish(Long wishId, Long currentUserId) {
