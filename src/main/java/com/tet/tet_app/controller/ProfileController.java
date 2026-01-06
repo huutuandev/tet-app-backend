@@ -1,5 +1,6 @@
 package com.tet.tet_app.controller;
 
+import com.tet.tet_app.dto.response.ApiResponse;
 import com.tet.tet_app.dto.response.ProfileResponse;
 import com.tet.tet_app.dto.request.ProfileUpdateRequest;
 import com.tet.tet_app.security.user.CustomUserDetails;
@@ -16,20 +17,36 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-    // LẤY PROFILE
+    // ⭐ LẤY PROFILE
     @GetMapping("/me")
-    public ResponseEntity<ProfileResponse> getMyProfile(
+    public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        return ResponseEntity.ok(profileService.getProfile(currentUser.getUser()));
+        var profile = profileService.getProfile(currentUser.getUser());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Lấy thông tin hồ sơ thành công",
+                        profile
+                )
+        );
     }
 
-    // CẬP NHẬT PROFILE
+    // ⭐ CẬP NHẬT PROFILE
     @PutMapping("/me")
-    public ResponseEntity<ProfileResponse> updateProfile(
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestBody ProfileUpdateRequest request) {
 
-        return ResponseEntity.ok(profileService.updateProfile(currentUser.getUser(), request));
+        var updated = profileService.updateProfile(currentUser.getUser(), request);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Cập nhật hồ sơ thành công",
+                        updated
+                )
+        );
     }
 }

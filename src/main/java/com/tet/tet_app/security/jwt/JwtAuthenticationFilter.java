@@ -1,5 +1,6 @@
 package com.tet.tet_app.security.jwt;
 
+import com.tet.tet_app.exception.JwtAuthenticationException;
 import com.tet.tet_app.security.user.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -8,7 +9,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.security.SignatureException;
 
 @Component
 @RequiredArgsConstructor
@@ -29,9 +28,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+
+        // Không có token → để EntryPoint xử lý
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -43,47 +45,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (ExpiredJwtException ex) {
-            writeError(response, HttpStatus.UNAUTHORIZED, "Token expired", "Phiên đăng nhập đã hết hạn");
-            return;
-        } catch (MalformedJwtException ex) {
-            writeError(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Token không hợp lệ");
-            return;
-        } catch (Exception ex) {
-            writeError(response, HttpStatus.UNAUTHORIZED, "Invalid token", "Token không hợp lệ");
-            return;
+            throw new JwtAuthenticationException("TOKEN_EXPIRED");
+        } catch (MalformedJwtException | IllegalArgumentException ex) {
+            throw new JwtAuthenticationException("TOKEN_INVALID");
         }
 
+        if (userEmail != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(userEmail);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (!jwtService.isTokenValid(jwt, userDetails)) {
+                throw new JwtAuthenticationException("TOKEN_INVALID");
             }
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
+
         filterChain.doFilter(request, response);
     }
-
-    private void writeError(HttpServletResponse response,
-                            HttpStatus status,
-                            String error,
-                            String message) throws IOException {
-
-        response.setStatus(status.value());
-        response.setContentType("application/json;charset=UTF-8");
-
-        String body = """
-        {
-          "status": %d,
-          "error": "%s",
-          "message": "%s"
-        }
-        """.formatted(status.value(), error, message);
-
-        response.getWriter().write(body);
-    }
-
 }
+
+
