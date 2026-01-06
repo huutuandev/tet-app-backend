@@ -8,6 +8,7 @@ import com.tet.tet_app.entity.Wallet;
 import com.tet.tet_app.entity.WalletTransaction;
 import com.tet.tet_app.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +28,16 @@ public class GiftService {
     public GiftResponse sendGift(User sender, GiftSendRequest request) {
 
         Long senderId = sender.getId();
-        Long receiverId = request.getReceiverId();
+        String email = request.getEmail();
         int amount = request.getAmount();
+
+        User receiver = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Không tìm thấy người nhận với email: " + email
+                ));
+
+
+        Long receiverId = receiver.getId();
 
         if (senderId.equals(receiverId)) {
             throw new RuntimeException("Không thể tự lì xì cho chính mình");
@@ -37,8 +46,6 @@ public class GiftService {
         if (amount <= 0) {
             throw new RuntimeException("Số điểm không hợp lệ");
         }
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new RuntimeException("Người nhận không tồn tại"));
 
         Wallet senderWallet = walletRepository.findByUserId(senderId)
                 .orElseThrow(() -> new RuntimeException("Ví người gửi không tồn tại"));

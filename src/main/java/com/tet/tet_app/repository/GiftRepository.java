@@ -10,4 +10,5 @@ public interface GiftRepository extends JpaRepository<Gift, Long> {
     List<Gift> findByReceiverIdOrderByCreatedAtDesc(Long receiverId);
 
     List<Gift> findBySenderIdOrderByCreatedAtDesc(Long senderId);
+
 }

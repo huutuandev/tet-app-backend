@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class GiftSendRequest {
-    private Long receiverId;
+    private String email;
     private int amount;
     private String message;
 }
