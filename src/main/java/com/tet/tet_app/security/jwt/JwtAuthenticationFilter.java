@@ -34,7 +34,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = null;
 
-        if (request.getCookies() != null) {
+// 1️⃣ HEADER (Postman, Mobile)
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
+
+// 2️⃣ COOKIE (Browser)
+        if (jwt == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("access_token".equals(cookie.getName())) {
                     jwt = cookie.getValue();
