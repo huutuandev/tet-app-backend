@@ -1,8 +1,10 @@
 package com.tet.tet_app.security;
 
-import com.tet.tet_app.security.oauth.OAuth2AuthenticationSuccessHandler;
+import com.tet.tet_app.security.handler.CustomAccessDeniedHandler;
+import com.tet.tet_app.security.handler.CustomAuthenticationEntryPoint;
 import com.tet.tet_app.security.jwt.JwtAuthenticationFilter;
 import com.tet.tet_app.security.oauth.CustomOAuth2UserService;
+import com.tet.tet_app.security.oauth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,39 +17,59 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+        private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+        private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // Cho phép ĐĂNG KÝ và ĐĂNG NHẬP EMAIL mà KHÔNG bị redirect
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            http
+                    .csrf(csrf -> csrf.disable())
 
-                        // Các endpoint auth khác cần JWT
-                        .requestMatchers("/api/auth/**").authenticated()
+                    .sessionManagement(session ->
+                            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    )
 
-                        // Google OAuth2 endpoints
-                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                    .exceptionHandling(ex -> ex
+                            .authenticationEntryPoint(authenticationEntryPoint)
+                            .accessDeniedHandler(accessDeniedHandler)
+                    )
 
-                        // Share link lời chúc
-                        .requestMatchers("/api/wishes/share/**").permitAll()
-                        .requestMatchers("/api/profile/**").hasRole("USER")
-                        // Tất cả còn lại cần token
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/google") // chỉ kích hoạt khi gọi trực tiếp
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(oAuth2SuccessHandler)
-                )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(
+                                    "/api/auth/register",
+                                    "/api/auth/login",
+                                    "/oauth2/**",
+                                    "/login/oauth2/**",
+                                    "/api/shop/items"
+                            ).permitAll()
 
-        return http.build();
+                            .requestMatchers(
+                                    "/api/profile/**",
+                                    "/api/house/me",
+                                    "/api/shop/buy",
+                                    "/api/shop/inventory",
+                                    "/api/house/me",
+                                    "/api/house/place",
+                                    "/api/house/**"
+                            ).hasRole("USER")
+
+                            .anyRequest().authenticated()
+                    )
+
+                    .oauth2Login(oauth2 -> oauth2
+                            .loginPage("/oauth2/authorization/google")
+                            .userInfoEndpoint(userInfo ->
+                                    userInfo.userService(customOAuth2UserService)
+                            )
+                            .successHandler(oAuth2SuccessHandler)
+                    )
+
+                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+            return http.build();
+        }
     }
 
-}

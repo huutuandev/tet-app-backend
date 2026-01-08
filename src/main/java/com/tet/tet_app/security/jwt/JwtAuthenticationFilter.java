@@ -1,6 +1,9 @@
 package com.tet.tet_app.security.jwt;
 
+import com.tet.tet_app.exception.JwtAuthenticationException;
 import com.tet.tet_app.security.user.UserDetailsServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,27 +28,54 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+
+        // Không có token → để EntryPoint xử lý
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail = jwtService.extractUsername(jwt);
+        String userEmail;
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (ExpiredJwtException ex) {
+            throw new JwtAuthenticationException("TOKEN_EXPIRED");
+        } catch (MalformedJwtException | IllegalArgumentException ex) {
+            throw new JwtAuthenticationException("TOKEN_INVALID");
         }
+
+        if (userEmail != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(userEmail);
+
+            if (!jwtService.isTokenValid(jwt, userDetails)) {
+                throw new JwtAuthenticationException("TOKEN_INVALID");
+            }
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+
         filterChain.doFilter(request, response);
     }
 }
+
+
