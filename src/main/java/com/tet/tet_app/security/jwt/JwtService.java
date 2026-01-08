@@ -1,4 +1,4 @@
-package com.tet.tet_app.service;
+package com.tet.tet_app.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

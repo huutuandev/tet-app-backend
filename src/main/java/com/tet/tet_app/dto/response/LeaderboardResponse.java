@@ -1,17 +1,15 @@
 package com.tet.tet_app.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
-@Builder
-public class AuthResponse {
-    private String token;
+public class LeaderboardResponse {
+
     private Long userId;
     private String fullName;
     private String avatarUrl;
+    private int points;
 }
+

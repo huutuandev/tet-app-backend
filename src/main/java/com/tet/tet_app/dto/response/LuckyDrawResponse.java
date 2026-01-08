@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthResponse {
-    private String token;
-    private Long userId;
-    private String fullName;
-    private String avatarUrl;
+public class LuckyDrawResponse {
+    private String rewardName;
+    private String rewardType;
+    private int value;
+    private String message;
 }
