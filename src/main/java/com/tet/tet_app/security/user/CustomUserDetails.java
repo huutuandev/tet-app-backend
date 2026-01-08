@@ -53,6 +53,7 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
+
     // Getter quan trọng: lấy entity User gốc
     public User getUser() {
         return user;
