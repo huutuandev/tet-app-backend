@@ -36,6 +36,10 @@ public class User {
     @Column(name = "google_id", length = 120)
     private String googleId;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 

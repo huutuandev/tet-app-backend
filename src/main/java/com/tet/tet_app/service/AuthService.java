@@ -22,24 +22,41 @@ public class AuthService {
     private final UserDetailsServiceImpl userDetailsService;
 
     public AuthResponse login(String email, String password) {
+
+        // 1️⃣ Kiểm tra user tồn tại
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Không tìm được tài khoản!")
+                );
+
+        // 2️⃣ Kiểm tra đã active chưa
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Tài khoản chưa được xác thực email!");
+        }
+
+        // 3️⃣ Authenticate (Spring Security sẽ check password)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+
+        // 4️⃣ Generate JWT
+        UserDetails userDetails =
+                userDetailsService.loadUserByUsername(email);
+
         String jwt = jwtService.generateToken(userDetails);
-        User user = userRepository.findByEmail(email).orElseThrow(()
-        -> new UsernameNotFoundException("Không tìm được tài khoản !"));
+
+        // 5️⃣ Trả response
         return AuthResponse.builder()
                 .userId(user.getId())
                 .fullName(user.getFullName())
-                .token(jwt)
                 .avatarUrl(user.getAvatarUrl())
+                .token(jwt)
                 .build();
     }
 
     public String generateJwtForUser(User user) {
-
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(user.getEmail());
+        UserDetails userDetails =
+                userDetailsService.loadUserByUsername(user.getEmail());
         return jwtService.generateToken(userDetails);
     }
 }
