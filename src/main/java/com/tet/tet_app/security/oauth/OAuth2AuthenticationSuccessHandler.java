@@ -3,6 +3,7 @@ package com.tet.tet_app.security.oauth;
 import com.tet.tet_app.entity.User;
 import com.tet.tet_app.security.jwt.JwtService;
 import com.tet.tet_app.service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,13 +34,23 @@ public class OAuth2AuthenticationSuccessHandler
         String googleId = oAuth2User.getAttribute("sub");
         String avatar = oAuth2User.getAttribute("picture");
 
-        User user = userService.registerOrGetGoogleUser(googleId, email, name, avatar);
+        User user = userService.registerOrGetGoogleUser(
+                googleId, email, name, avatar
+        );
 
-        // 2️⃣ Generate JWT
         String token = jwtService.generateTokenFromEmail(user.getEmail());
 
-        // 3️⃣ Redirect về FE
-        String redirectUrl = "http://localhost:3000/oauth2/success?token=" + token;
-        response.sendRedirect(redirectUrl);
+        // ✅ SET COOKIE ĐÚNG CÁCH (DEV)
+        response.addHeader(
+                "Set-Cookie",
+                "access_token=" + token +
+                        "; HttpOnly" +
+                        "; Path=/" +
+                        "; Max-Age=3600" +
+                        "; SameSite=Lax"
+        );
+
+        response.sendRedirect("http://localhost:3000/oauth2/success");
     }
 }
+
