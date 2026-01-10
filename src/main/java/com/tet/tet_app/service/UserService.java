@@ -1,8 +1,6 @@
 package com.tet.tet_app.service;
 
 import com.tet.tet_app.dto.response.UserResponse;
-import com.tet.tet_app.event.EmailVerificationEvent;  // ← FIX IMPORT NÀY
-import com.tet.tet_app.dto.response.AuthResponse;
 import com.tet.tet_app.entity.Role;
 import com.tet.tet_app.entity.User;
 import com.tet.tet_app.entity.Wallet;
@@ -31,7 +29,6 @@ public class UserService {
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
-    private final EmailVerificationProducer emailVerificationProducer;
     private final TempUserService tempUserService;
 
     @Transactional
@@ -56,13 +53,7 @@ public class UserService {
 
         String code = emailVerificationService.createVerificationCode(email);
 
-        EmailVerificationEvent event = new EmailVerificationEvent(
-                email,
-                code,
-                fullName,
-                null
-        );
-        emailVerificationProducer.sendVerificationEvent(event);
+        emailVerificationService.sendVerificationEmailAsync(email, code, fullName);
 
         log.info("Đã lưu user tạm trong Redis: {}", email);
     }

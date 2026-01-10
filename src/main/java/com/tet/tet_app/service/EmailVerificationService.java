@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import jakarta.mail.internet.MimeMessage;
 
@@ -33,9 +34,16 @@ public class EmailVerificationService {
     private static final String VERIFICATION_PREFIX = "email:verify:";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
+
+
+    @Async("emailExecutor")
+    public void sendVerificationEmailAsync(String email, String code, String fullName) {
+        sendVerificationEmail(email, code, fullName);
+    }
     /**
      * Tạo mã xác thực và lưu vào Redis
      */
+
     public String createVerificationCode(String email) {
         String code = generateRandomCode(codeLength);
         String key = VERIFICATION_PREFIX + email;

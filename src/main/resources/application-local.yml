@@ -20,18 +20,6 @@ spring:
       host: localhost
       port: 6379
 
-  # Kafka - FIX CHỖ NÀY
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: tet-email-verification-group
-      auto-offset-reset: latest  # ⚠️ ĐỔI từ "earliest" → "latest"
-      enable-auto-commit: false  # ⚠️ THÊM dòng này
-      properties:
-        spring.json.trusted.packages: "*"  # ⚠️ THÊM dòng này
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   # Email
   mail:

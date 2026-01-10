@@ -2,7 +2,6 @@ package com.tet.tet_app.controller;
 
 import com.tet.tet_app.dto.request.LoginRequest;
 import com.tet.tet_app.dto.response.ApiResponse;
-import com.tet.tet_app.event.EmailVerificationEvent;  // ← IMPORT NÀY
 import com.tet.tet_app.dto.request.RegisterRequest;
 import com.tet.tet_app.dto.request.ResendCodeRequest;
 import com.tet.tet_app.dto.request.VerifyEmailRequest;
@@ -11,7 +10,6 @@ import com.tet.tet_app.entity.User;
 import com.tet.tet_app.redis.model.TempUser;
 import com.tet.tet_app.redis.service.TempUserService;
 import com.tet.tet_app.service.AuthService;
-import com.tet.tet_app.service.EmailVerificationProducer;
 import com.tet.tet_app.service.EmailVerificationService;
 import com.tet.tet_app.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,6 @@ public class AuthenticationController {
     private final UserService userService;
     private final EmailVerificationService emailVerificationService;
     private final AuthService authService;
-    private final EmailVerificationProducer emailVerificationProducer;
     private final TempUserService tempUserService;
 
     @PostMapping("/register")
@@ -112,13 +109,10 @@ public class AuthenticationController {
 
         String newCode = emailVerificationService.createVerificationCode(request.getEmail());
 
-        EmailVerificationEvent event = new EmailVerificationEvent(
-                request.getEmail(),
-                newCode,
-                tempUser.getFullName(),
-                null
-        );
-        emailVerificationProducer.sendVerificationEvent(event);
+        emailVerificationService.sendVerificationEmailAsync(
+                request.getEmail()
+                , newCode
+                , tempUser.getFullName());
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Đã gửi lại mã", null)
