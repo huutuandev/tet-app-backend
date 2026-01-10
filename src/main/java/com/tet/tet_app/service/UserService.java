@@ -1,5 +1,6 @@
 package com.tet.tet_app.service;
 
+import com.tet.tet_app.dto.response.UserResponse;
 import com.tet.tet_app.event.EmailVerificationEvent;  // ← FIX IMPORT NÀY
 import com.tet.tet_app.dto.response.AuthResponse;
 import com.tet.tet_app.entity.Role;
@@ -12,6 +13,8 @@ import com.tet.tet_app.repository.UserRepository;
 import com.tet.tet_app.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;  // ← THÊM IMPORT NÀY
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +29,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final WalletRepository walletRepository;
-    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationProducer emailVerificationProducer;
@@ -142,8 +144,39 @@ public class UserService {
         return user;
     }
 
-    @Transactional
-    public User updateUser(User user) {
-        return userRepository.save(user);
+    //ADMIN
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
+
+        return userRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
+
+    @Transactional
+    public UserResponse updateUserActive(Long userId, Boolean active) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        user.setIsActive(active);
+
+        User saved = userRepository.save(user);
+
+        return mapToResponse(saved);
+    }
+
+    private UserResponse mapToResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .enabled(user.getIsActive())
+                .roles(
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName) // ✅ map từ Role → String
+                                .toList()
+                )
+                .build();
+    }
+
 }
