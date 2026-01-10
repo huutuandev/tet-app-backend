@@ -20,7 +20,6 @@ spring:
       host: localhost
       port: 6379
 
-
   # Email
   mail:
     host: smtp.gmail.com
@@ -32,6 +31,7 @@ spring:
         auth: true
         starttls.enable: true
 
+  # OAuth2 Configuration
   security:
     oauth2:
       client:
@@ -48,11 +48,18 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
+# ✅ APP CONFIG - PHẢI Ở NGOÀI CÙNG (CÙNG CẤP VỚI spring:)
 app:
   jwt:
     secret: NguyenHuuTuan_dev_website-180505/01072023
-    expiration-ms: 86400000
+    access-expiration-ms: 900000        # 15 phút
+    refresh-expiration-ms: 604800000    # 7 ngày
+
   email:
     verification:
       expiration-minutes: 15
       code-length: 6
+
+  oauth2:
+    # URL frontend sẽ nhận callback sau khi OAuth2 thành công
+    redirect-uri: http://localhost:3000/oauth2/callback

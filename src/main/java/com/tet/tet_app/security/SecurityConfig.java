@@ -47,6 +47,7 @@ public class SecurityConfig {
                                     "/api/auth/resend-code",
                                     "/api/auth/verify-email",
                                     "/oauth2/**",
+                                    "/api/auth/oauth2/exchange",
                                     "/login/oauth2/**",
                                     "/api/shop/items"
                             ).permitAll()

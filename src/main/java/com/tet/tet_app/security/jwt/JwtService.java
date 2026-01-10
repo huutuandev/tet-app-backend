@@ -1,83 +1,138 @@
 package com.tet.tet_app.security.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${app.jwt.secret}")
     private String secret;
 
-    @Value("${app.jwt.expiration-ms}")
-    private long expirationMs;
+    @Value("${app.jwt.access-expiration-ms}")
+    private long accessExpirationMs;
 
-    // Tạo token
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+    @Value("${app.jwt.refresh-expiration-ms}")
+    private long refreshExpirationMs;
+
+    /* ================= CREATE TOKEN ================= */
+
+    /**
+     * Tạo access token (15 phút)
+     */
+    public String generateAccessToken(String email) {
+        return buildToken(email, accessExpirationMs);
     }
-    public String generateTokenFromEmail(String email) {
-        return createToken(new HashMap<>(), email);
+
+    /**
+     * Tạo refresh token (7 ngày) - Không dùng nữa, dùng UUID thay thế
+     * @deprecated Sử dụng UUID.randomUUID() cho refresh token
+     */
+    @Deprecated
+    public String generateRefreshToken(String email) {
+        return buildToken(email, refreshExpirationMs);
     }
 
+    /**
+     * Build JWT token
+     */
+    private String buildToken(String subject, long expirationMs) {
+        long now = System.currentTimeMillis();
 
-    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .claims(claims)                                      // OK trong 0.12.x
                 .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(getSignKey())                              // Chỉ cần truyền SecretKey, không cần algorithm
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expirationMs))
+                .signWith(getSignKey())
                 .compact();
     }
 
-    // Lấy key để sign và verify
-    private SecretKey getSignKey() {
-        byte[] keyBytes = secret.getBytes();                     // Không cần BASE64 decode nếu secret là plain text
-        // Nếu bạn dùng BASE64 encoded secret (khuyến nghị), thì dùng dòng dưới:
-        // byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+    /* ================= PARSE & EXTRACT ================= */
 
-    // Extract
-    public String extractUsername(String token) {
+    /**
+     * Lấy email từ token
+     */
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /**
+     * Lấy expiration date
+     */
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    /**
+     * Extract một claim cụ thể từ token
+     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        return claimsResolver.apply(claims);  // ✅ ÁP DỤNG resolver LÊN claims
     }
 
+    /**
+     * Parse token và lấy tất cả claims
+     */
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSignKey())                        // Cách mới, an toàn nhất
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSignKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token đã hết hạn: {}", e.getMessage());
+            throw e;
+        } catch (JwtException e) {
+            log.error("JWT token không hợp lệ: {}", e.getMessage());
+            throw e;
+        }
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    /* ================= VALIDATION ================= */
+
+    /**
+     * Kiểm tra token đã hết hạn chưa
+     */
+    public boolean isTokenExpired(String token) {
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    /**
+     * Validate token với email
+     */
+    public boolean validateToken(String token, String email) {
+        try {
+            final String tokenEmail = extractEmail(token);
+            return (tokenEmail.equals(email) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    /* ================= SECRET KEY ================= */
+
+    /**
+     * Tạo signing key từ secret
+     */
+    private SecretKey getSignKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 }
