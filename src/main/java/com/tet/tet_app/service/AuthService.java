@@ -31,7 +31,7 @@ public class AuthService {
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm được tài khoản!"));
 
         if (!user.getIsActive()) {
-            throw new RuntimeException("Tài khoản chưa được xác thực email!");
+            throw new RuntimeException("Tài khoản của bạn đã bị vô hiệu hóa !");
         }
 
         // Xác thực username/password

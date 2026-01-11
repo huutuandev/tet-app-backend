@@ -126,6 +126,7 @@ public class LuckyDrawService {
                 .name(req.getName())
                 .rewardType(req.getRewardType())
                 .value(req.getValue())
+                .active(Boolean.TRUE)
                 .message(req.getMessage())
                 .build();
 
@@ -141,6 +142,7 @@ public class LuckyDrawService {
                                 .rewardType(saved.getRewardType())
                                 .value(saved.getValue())
                                 .message(saved.getMessage())
+                                .active(saved.isActive())
                                 .build()
                 )
                 .build();
@@ -170,6 +172,7 @@ public class LuckyDrawService {
                                 .rewardType(saved.getRewardType())
                                 .value(saved.getValue())
                                 .message(saved.getMessage())
+                                .active(saved.isActive())
                                 .build()
                 )
                 .build();

@@ -102,11 +102,12 @@ public class ShopService {
                 .price(req.getPrice())
                 .category(req.getCategory())
                 .imageUrl(req.getImageUrl())
+                .active(Boolean.TRUE)
                 .build();
 
         ShopItem saved = shopItemRepository.save(item);
 
-        return mapToResponse(saved);
+        return mapToAdminResponse(saved);
     }
 
     @Transactional
@@ -123,7 +124,7 @@ public class ShopService {
 
         ShopItem saved = shopItemRepository.save(item);
 
-        return mapToResponse(saved);
+        return mapToAdminResponse(saved);
     }
 
     @Transactional

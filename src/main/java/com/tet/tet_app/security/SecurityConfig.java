@@ -42,10 +42,11 @@ public class SecurityConfig {
 
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers(
-                                    "/api/auth/register",
-                                    "/api/auth/login",
-                                    "/api/auth/resend-code",
-                                    "/api/auth/verify-email",
+//                                    "/api/auth/register",
+//                                    "/api/auth/login",
+//                                    "/api/auth/resend-code",
+//                                    "/api/auth/verify-email",
+                                    "/api/auth/**",
                                     "/oauth2/**",
                                     "/api/auth/oauth2/exchange",
                                     "/login/oauth2/**",
