@@ -1,23 +1,36 @@
-version: "3.9"
-
 services:
+  # MySQL Database
   mysql:
-    image: mysql:8.0
-    container_name: mysql-local
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: tet_fun_app
+    image: mysql:9.1
+    container_name: mysql
     ports:
       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: tet_fun_app
     volumes:
-      - mysql_local:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Redis Cache
   redis:
-    image: redis:7
-    container_name: redis-local
+    image: redis:7-alpine
+    container_name: redis
     ports:
       - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mysql_local:
+  mysql_data:
+  redis_data:
