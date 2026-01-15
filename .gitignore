@@ -8,6 +8,7 @@
 
 
 application-local.yml
+application.properties.bak
 ############################
 # MAVEN / GRADLE BUILD
 ############################
