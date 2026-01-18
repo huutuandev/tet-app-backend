@@ -50,7 +50,8 @@ public class SecurityConfig {
                                     "/oauth2/**",
                                     "/api/auth/oauth2/exchange",
                                     "/login/oauth2/**",
-                                    "/api/shop/items"
+                                    "/api/shop/items",
+                                    "/api/wishes/share/**"
                             ).permitAll()
 
                             .requestMatchers(

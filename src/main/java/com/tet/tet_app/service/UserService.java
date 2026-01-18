@@ -1,5 +1,6 @@
 package com.tet.tet_app.service;
 
+import com.tet.tet_app.dto.response.UserCheckResponse;
 import com.tet.tet_app.dto.response.UserResponse;
 import com.tet.tet_app.entity.Role;
 import com.tet.tet_app.entity.User;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -154,6 +156,31 @@ public class UserService {
 
         return mapToResponse(saved);
     }
+
+    public UserCheckResponse checkEmailExact(String email) {
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return new UserCheckResponse(
+                    false,
+                    false,
+                    null,
+                    null
+            );
+        }
+
+        User user = userOpt.get();
+
+        return new UserCheckResponse(
+                true,
+                user.getIsActive(),
+                user.getFullName(),
+                user.getAvatarUrl()
+        );
+    }
+
+
 
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()

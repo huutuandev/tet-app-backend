@@ -31,7 +31,7 @@ public class OAuth2AuthenticationSuccessHandler
     private final RefreshTokenService refreshTokenService;
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Value("${app.oauth2.redirect-uri:http://localhost:3000/oauth2/callback}")
+    @Value("${app.oauth2.redirect-uri:http://localhost:5178/oauth2/callback}")
     private String frontendRedirectUri;
 
     @Override

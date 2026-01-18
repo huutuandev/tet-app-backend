@@ -62,4 +62,4 @@ app:
 
   oauth2:
     # URL frontend sẽ nhận callback sau khi OAuth2 thành công
-    redirect-uri: http://localhost:3000/oauth2/callback
+    redirect-uri: http://localhost:5178/oauth2/callback

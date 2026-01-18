@@ -23,7 +23,8 @@ public class Wish {
     @Column(name = "receiver_id")
     private Long receiverId;
 
-    @Column(nullable = false)
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @JsonProperty("isPrivate")
