@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   #update          # LẦN ĐẦU: update | ổn định rồi có thể chuyển validate
+      ddl-auto: validate   #update          # LẦN ĐẦU: update | ổn định rồi có thể chuyển validate
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true

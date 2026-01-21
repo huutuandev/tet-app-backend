@@ -40,7 +40,7 @@ public class AuthService {
         );
 
         // Tạo access token (trả về response body)
-        String accessToken = jwtService.generateAccessToken(user.getEmail());
+        String accessToken = jwtService.generateAccessToken(user);
 
         // Tạo refresh token (sẽ set vào cookie)
         String refreshToken = UUID.randomUUID().toString();
@@ -76,7 +76,7 @@ public class AuthService {
         }
 
         // Tạo access token mới
-        String newAccessToken = jwtService.generateAccessToken(user.getEmail());
+        String newAccessToken = jwtService.generateAccessToken(user);
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
@@ -90,7 +90,7 @@ public class AuthService {
      * Tạo access token cho user (dùng khi verify email)
      */
     public String generateAccessToken(User user) {
-        return jwtService.generateAccessToken(user.getEmail());
+        return jwtService.generateAccessToken(user);
     }
 
     /**

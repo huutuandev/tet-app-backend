@@ -1,5 +1,7 @@
 package com.tet.tet_app.security.jwt;
 
+import com.tet.tet_app.entity.Role;
+import com.tet.tet_app.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -31,8 +33,8 @@ public class JwtService {
     /**
      * Tạo access token (15 phút)
      */
-    public String generateAccessToken(String email) {
-        return buildToken(email, accessExpirationMs);
+    public String generateAccessToken(User user) {
+        return buildToken(user, accessExpirationMs);
     }
 
     /**
@@ -40,23 +42,30 @@ public class JwtService {
      * @deprecated Sử dụng UUID.randomUUID() cho refresh token
      */
     @Deprecated
-    public String generateRefreshToken(String email) {
-        return buildToken(email, refreshExpirationMs);
+    public String generateRefreshToken(User user) {
+        return buildToken(user, refreshExpirationMs);
     }
 
     /**
      * Build JWT token
      */
-    private String buildToken(String subject, long expirationMs) {
+    private String buildToken(User user, long expirationMs) {
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                .subject(subject)
+                .subject(user.getEmail())
+                .claim("roles",
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName)
+                                .toList()
+                )
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + expirationMs))
                 .signWith(getSignKey())
                 .compact();
     }
+
 
     /* ================= PARSE & EXTRACT ================= */
 

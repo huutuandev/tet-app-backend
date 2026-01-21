@@ -51,7 +51,7 @@ public class OAuth2AuthenticationSuccessHandler
                     googleId, email, name, avatar
             );
 
-            String accessToken = jwtService.generateAccessToken(user.getEmail());
+            String accessToken = jwtService.generateAccessToken(user);
             String refreshToken = UUID.randomUUID().toString();
             refreshTokenService.save(user.getId(), refreshToken, 7);
 
