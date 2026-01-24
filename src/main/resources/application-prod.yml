@@ -52,6 +52,10 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 server:
   port: 8080
@@ -70,3 +74,7 @@ app:
 
   oauth2:
     redirect-uri: ${FRONTEND_OAUTH_CALLBACK}
+
+  upload:
+    dir: ${UPLOAD_DIR:/uploads/images}
+    public-url: ${UPLOAD_PUBLIC_URL:http://localhost:8080}

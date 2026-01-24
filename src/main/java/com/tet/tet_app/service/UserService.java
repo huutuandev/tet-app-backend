@@ -91,6 +91,10 @@ public class UserService {
         User user = userRepository.findByGoogleId(googleId)
                 .orElseGet(() -> userRepository.findByEmail(email).orElse(null));
 
+        if (user != null && !user.getIsActive()) {
+            throw new RuntimeException("Tài khoản của bạn đã bị vô hiệu hóa !");
+        }
+
         if (user == null) {
             user = User.builder()
                     .email(email)
