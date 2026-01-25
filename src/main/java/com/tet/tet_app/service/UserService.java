@@ -127,9 +127,12 @@ public class UserService {
             needUpdate = true;
         }
 
-        if (avatarUrl != null && !avatarUrl.equals(user.getAvatarUrl())) {
-            user.setAvatarUrl(avatarUrl);
-            needUpdate = true;
+        if (user.getAvatarUrl() == null || user.getAvatarUrl().isBlank()) {
+            // Chỉ set nếu chưa có avatar nào (lần đầu login hoặc user xóa ảnh)
+            if (avatarUrl != null) {
+                user.setAvatarUrl(avatarUrl);
+                needUpdate = true;
+            }
         }
 
         if (needUpdate) {
