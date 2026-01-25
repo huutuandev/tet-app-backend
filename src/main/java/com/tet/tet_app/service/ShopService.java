@@ -23,6 +23,7 @@ public class ShopService {
     private final UserItemRepository userItemRepository;
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final FileStorageService fileStorageService;
 
     // MUA ITEM
     @Transactional
@@ -115,11 +116,15 @@ public class ShopService {
 
         ShopItem item = shopItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        String oldImageUrl = item.getImageUrl();
 
         if (req.getName() != null) item.setName(req.getName());
         if (req.getPrice() != null) item.setPrice(req.getPrice());
         if (req.getCategory() != null) item.setCategory(req.getCategory());
-        if (req.getImageUrl() != null) item.setImageUrl(req.getImageUrl());
+        if (req.getImageUrl() != null) {
+            item.setImageUrl(req.getImageUrl());
+            fileStorageService.deleteOldFile(oldImageUrl);
+        }
         if (req.getActive() != null) item.setActive(req.getActive());
 
         ShopItem saved = shopItemRepository.save(item);

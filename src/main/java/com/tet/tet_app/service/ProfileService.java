@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
 
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
 
     public ProfileResponse getProfile(User user) {
         Wallet wallet = user.getWallet();
@@ -32,6 +33,7 @@ public class ProfileService {
     @Transactional
     public ProfileResponse updateProfile(User user, ProfileUpdateRequest request) {
         // Cập nhật thông tin
+        String oldAvatarUrl = user.getAvatarUrl();
         if (request.getFullName() != null && !request.getFullName().isBlank()) {
             user.setFullName(request.getFullName());
         }
@@ -39,7 +41,9 @@ public class ProfileService {
             user.setFavoriteQuote(request.getFavoriteQuote());
         }
         if (request.getAvatarUrl() != null && !request.getAvatarUrl().isBlank()) {
-           user.setAvatarUrl(request.getAvatarUrl());
+            user.setAvatarUrl(request.getAvatarUrl());
+
+            fileStorageService.deleteOldFile(oldAvatarUrl);
         }
 
         User updatedUser = userRepository.save(user);
