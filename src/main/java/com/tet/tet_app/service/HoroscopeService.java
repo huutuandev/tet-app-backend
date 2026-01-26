@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -76,6 +77,7 @@ public class HoroscopeService {
                     .amount(HOROSCOPE_POINT)
                     .type("HOROSCOPE_REWARD")
                     .description("Reward for daily horoscope")
+                    .createdAt(LocalDateTime.now())
                     .build();
 
             walletTransactionRepository.save(tx);

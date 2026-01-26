@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -68,6 +69,7 @@ public class LuckyDrawService {
                     .amount(reward.getValue())
                     .type("draw")
                     .description("Bốc lộc nhận " + reward.getValue() + " điểm")
+                    .createdAt(LocalDateTime.now())
                     .build();
             walletTransactionRepository.save(transaction);
         }else if ("sticker".equals(reward.getRewardType()) || "avatar".equals(reward.getRewardType())) {
