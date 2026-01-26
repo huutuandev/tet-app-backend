@@ -25,4 +25,7 @@ public class LuckyReward {
     private int value = 0;
 
     private String message;
+
+    @Column(nullable = false)
+    private boolean active = true;
 }

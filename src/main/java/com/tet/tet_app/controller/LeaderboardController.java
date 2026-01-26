@@ -2,7 +2,7 @@ package com.tet.tet_app.controller;
 
 import com.tet.tet_app.dto.response.ApiResponse;
 import com.tet.tet_app.dto.response.LeaderboardResponse;
-import com.tet.tet_app.service.LeaderboardService;
+import com.tet.tet_app.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LeaderboardController {
 
-    private final LeaderboardService leaderboardService;
+    private final WalletService leaderboardService;
 
     @GetMapping("/top10")
     public ResponseEntity<ApiResponse<List<LeaderboardResponse>>> getTop10() {

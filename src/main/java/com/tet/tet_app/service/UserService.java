@@ -1,13 +1,18 @@
 package com.tet.tet_app.service;
 
-import com.tet.tet_app.dto.response.AuthResponse;
+import com.tet.tet_app.dto.response.UserResponse;
 import com.tet.tet_app.entity.Role;
 import com.tet.tet_app.entity.User;
 import com.tet.tet_app.entity.Wallet;
+import com.tet.tet_app.redis.model.TempUser;
+import com.tet.tet_app.redis.service.TempUserService;
 import com.tet.tet_app.repository.RoleRepository;
 import com.tet.tet_app.repository.UserRepository;
 import com.tet.tet_app.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;  // ← THÊM IMPORT NÀY
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,77 +21,96 @@ import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j  // ← THÊM ANNOTATION NÀY
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final WalletRepository walletRepository;
-    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
+    private final TempUserService tempUserService;
 
     @Transactional
-    public AuthResponse registerUser(String email, String password, String fullName) {
+    public void registerUser(String email, String password, String fullName) {
+
+        if (!emailVerificationService.isValidEmailFormat(email)) {
+            throw new RuntimeException("Email không hợp lệ!");
+        }
+
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email đã tồn tại!");
         }
 
-        User user = User.builder()
+        TempUser tempUser = TempUser.builder()
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
                 .fullName(fullName)
+                .build();
+
+        // Lưu user tạm 15 phút
+        tempUserService.saveTempUser(tempUser, 15);
+
+        String code = emailVerificationService.createVerificationCode(email);
+
+        emailVerificationService.sendVerificationEmailAsync(email, code, fullName);
+
+        log.info("Đã lưu user tạm trong Redis: {}", email);
+    }
+
+
+    @Transactional
+    public User createUserFromTemp(TempUser temp) {
+
+        User user = User.builder()
+                .email(temp.getEmail())
+                .passwordHash(temp.getPasswordHash())
+                .fullName(temp.getFullName())
+                .isActive(true)
                 .roles(new HashSet<>())
                 .build();
 
-        // Gán ROLE_USER
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Role USER không tồn tại"));
-        user.getRoles().add(userRole);
+        Role role = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
 
+        user.getRoles().add(role);
         user = userRepository.save(user);
 
-        // Tạo wallet tự động
         Wallet wallet = Wallet.builder()
-//                .userId(user.getId())
-                .balance(100)
                 .user(user)
+                .balance(100)
                 .build();
         walletRepository.save(wallet);
 
-        String jwt = authService.generateJwtForUser(user);
-
-        AuthResponse authResponse = AuthResponse.builder()
-                .userId(user.getId())
-                .fullName(user.getFullName())
-                .token(jwt)
-                .avatarUrl(user.getAvatarUrl())
-                .build();
-        return authResponse;
+        return user;
     }
+
 
     @Transactional
     public User registerOrGetGoogleUser(String googleId, String email, String fullName, String avatarUrl) {
-        // Ưu tiên tìm theo googleId (nếu có), sau đó mới tìm theo email
         User user = userRepository.findByGoogleId(googleId)
                 .orElseGet(() -> userRepository.findByEmail(email).orElse(null));
 
-        // Nếu chưa tồn tại user nào → tạo mới
+        if (user != null && !user.getIsActive()) {
+            throw new RuntimeException("Tài khoản của bạn đã bị vô hiệu hóa !");
+        }
+
         if (user == null) {
             user = User.builder()
                     .email(email)
                     .fullName(fullName)
                     .googleId(googleId)
-                    .avatarUrl(avatarUrl)  // có thể null nếu không truyền
+                    .avatarUrl(avatarUrl)
+                    .isActive(true)  // ← Google user tự động active
                     .roles(new HashSet<>())
                     .build();
 
-            // Gán ROLE_USER
             Role userRole = roleRepository.findByName("ROLE_USER")
                     .orElseThrow(() -> new RuntimeException("Role ROLE_USER không tồn tại"));
             user.getRoles().add(userRole);
 
             user = userRepository.save(user);
 
-            // Tạo wallet với số dư khởi tạo 100
             Wallet wallet = Wallet.builder()
                     .user(user)
                     .balance(100)
@@ -96,33 +120,61 @@ public class UserService {
             return user;
         }
 
-        // Nếu user đã tồn tại
         boolean needUpdate = false;
 
-        // Trường hợp user đăng nhập bằng email/password trước đó → liên kết với Google
         if (user.getGoogleId() == null) {
             user.setGoogleId(googleId);
             needUpdate = true;
         }
 
-        // Cập nhật avatar nếu có cung cấp và khác với hiện tại (tránh update không cần thiết)
-        if (avatarUrl != null && !avatarUrl.equals(user.getAvatarUrl())) {
-            user.setAvatarUrl(avatarUrl);
-            needUpdate = true;
+        if (user.getAvatarUrl() == null || user.getAvatarUrl().isBlank()) {
+            // Chỉ set nếu chưa có avatar nào (lần đầu login hoặc user xóa ảnh)
+            if (avatarUrl != null) {
+                user.setAvatarUrl(avatarUrl);
+                needUpdate = true;
+            }
         }
 
-        // Chỉ save nếu có thay đổi
         if (needUpdate) {
             user = userRepository.save(user);
         }
 
-        // Wallet luôn được tạo khi user mới, nên ở đây không cần tạo lại
-        // (nếu muốn đảm bảo chắc chắn có wallet, có thể thêm kiểm tra nhưng thường không cần)
-
         return user;
     }
-    @Transactional
-    public User updateUser(User user) {
-        return userRepository.save(user);
+
+    //ADMIN
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
+
+        return userRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
+
+    @Transactional
+    public UserResponse updateUserActive(Long userId, Boolean active) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        user.setIsActive(active);
+
+        User saved = userRepository.save(user);
+
+        return mapToResponse(saved);
+    }
+
+    private UserResponse mapToResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .enabled(user.getIsActive())
+                .roles(
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName) // ✅ map từ Role → String
+                                .toList()
+                )
+                .build();
+    }
+
 }

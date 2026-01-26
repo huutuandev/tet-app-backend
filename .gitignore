@@ -1,33 +1,81 @@
-HELP.md
+############################
+# ENVIRONMENT / SECRETS
+############################
+.env
+.env.*
+!.env.example
+!.env.examples
+
+
+application-local.yml
+application.properties.bak
+############################
+# MAVEN / GRADLE BUILD
+############################
 target/
+build/
+out/
+*.class
+
+############################
+# MAVEN WRAPPER
+############################
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
-.apt_generated
+############################
+# SPRING TOOL SUITE / ECLIPSE
+############################
 .classpath
-.factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
+.apt_generated
+.factorypath
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+############################
+# INTELLIJ IDEA
+############################
+.idea/
 *.iml
+*.iws
 *.ipr
 
-### NetBeans ###
+############################
+# VISUAL STUDIO CODE
+############################
+.vscode/
+
+############################
+# NETBEANS
+############################
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+############################
+# DOCKER
+############################
+docker-data/
+**/docker-data/
+*.pid
+
+############################
+# LOG FILES
+############################
+logs/
+*.log
+
+############################
+# OS FILES
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# KEEP EXAMPLE FILES
+############################
+!.env.example
+!.env.examples

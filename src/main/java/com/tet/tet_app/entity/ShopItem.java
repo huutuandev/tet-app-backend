@@ -1,5 +1,6 @@
 package com.tet.tet_app.entity;
 
+import com.tet.tet_app.entity.enums.ShopItemCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,8 +22,13 @@ public class ShopItem {
     @Column(nullable = false)
     private int price;
 
-    private String category;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private ShopItemCategory category;
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(nullable = false)
+    private boolean active = true; // disable thay vì xóa cứng
 }
