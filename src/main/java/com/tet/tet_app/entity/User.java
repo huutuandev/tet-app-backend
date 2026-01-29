@@ -53,7 +53,13 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+
+
     // Quan hệ 1-1 với Wallet
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Wallet wallet;
+
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private House house;
 }

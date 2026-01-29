@@ -48,7 +48,9 @@ public class SecurityConfig {
                                     "/login/oauth2/**",
                                     "/api/shop/items",
                                     "/api/uploads/**",
-                                    "/api/images/**"
+                                    "/api/images/**",
+                                    "/api/wishes/share/**",
+                                    "/api/house/share/**"
                             ).permitAll()
 
                             .requestMatchers(
