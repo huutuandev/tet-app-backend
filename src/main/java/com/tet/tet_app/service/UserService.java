@@ -1,5 +1,6 @@
 package com.tet.tet_app.service;
 
+import com.tet.tet_app.dto.request.ChangePasswordRequest;
 import com.tet.tet_app.dto.response.UserResponse;
 import com.tet.tet_app.entity.House;
 import com.tet.tet_app.entity.Role;
@@ -205,6 +206,27 @@ public class UserService {
                 user.getAvatarUrl()
         );
     }
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        if (!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new RuntimeException("Mật khẩu cũ không đúng");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng mật khẩu cũ");
+        }
+        // ✅ mã hoá mật khẩu mới
+        user.setPasswordHash(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+
+        userRepository.save(user);
+    }
 
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()
@@ -220,6 +242,8 @@ public class UserService {
                 )
                 .build();
     }
+
+
 
 
 }
