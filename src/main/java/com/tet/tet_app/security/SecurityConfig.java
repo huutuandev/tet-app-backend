@@ -61,7 +61,7 @@ public class SecurityConfig {
                                     "/api/house/me",
                                     "/api/house/place",
                                     "/api/house/**"
-                            ).hasRole("USER")
+                            ).hasAnyRole("USER", "ADMIN")
 
                             .anyRequest().authenticated()
                     )
