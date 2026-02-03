@@ -75,6 +75,16 @@ app:
   oauth2:
     redirect-uri: ${FRONTEND_OAUTH_CALLBACK}
 
+  cookie:
+    secure: true
+    same-site: Lax
+    path: /api/auth
+    max-age: 604800
+
+  cors:
+    allowed-origins:
+      - ${ALLOWED_ORIGINS}
+
   upload:
     dir: ${UPLOAD_DIR:/uploads/images}
     public-url: ${UPLOAD_PUBLIC_URL:http://localhost:8080}

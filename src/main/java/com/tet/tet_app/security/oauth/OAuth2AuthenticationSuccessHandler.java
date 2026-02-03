@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -34,6 +35,19 @@ public class OAuth2AuthenticationSuccessHandler
     @Value("${app.oauth2.redirect-uri:http://localhost/oauth2/callback}")
     private String frontendRedirectUri;
 
+    @Value("${app.cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site}")
+    private String sameSite;
+
+    @Value("${app.cookie.path}")
+    private String cookiePath;
+
+    @Value("${app.cookie.max-age}")
+    private long cookieMaxAge;
+
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -55,12 +69,16 @@ public class OAuth2AuthenticationSuccessHandler
             String refreshToken = UUID.randomUUID().toString();
             refreshTokenService.save(user.getId(), refreshToken, 7);
 
-            String refreshCookie = String.format(
-                    "refresh_token=%s; HttpOnly; Secure; Path=/api/auth; Max-Age=%d; SameSite=Strict",
-                    refreshToken,
-                    7 * 24 * 60 * 60
-            );
-            response.addHeader("Set-Cookie", refreshCookie);
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
+                    .httpOnly(true)
+                    .secure(cookieSecure)
+                    .sameSite(sameSite)
+                    .path(cookiePath)
+                    .maxAge(cookieMaxAge)
+                    .build();
+
+            response.addHeader("Set-Cookie", refreshCookie.toString());
+
 
             // ✅ TẠO ONE-TIME CODE (chỉ dùng 1 lần, hết hạn sau 60s)
             String oneTimeCode = UUID.randomUUID().toString();
