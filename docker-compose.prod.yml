@@ -5,8 +5,8 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"                     # ✅ KHÔNG lộ ra ngoài
     depends_on:
       mysql:
         condition: service_healthy
