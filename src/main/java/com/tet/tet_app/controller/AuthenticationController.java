@@ -8,6 +8,7 @@ import com.tet.tet_app.dto.request.VerifyEmailRequest;
 import com.tet.tet_app.dto.response.AuthResponse;
 import com.tet.tet_app.entity.User;
 import com.tet.tet_app.redis.model.TempUser;
+import com.tet.tet_app.redis.service.RateLimitService;
 import com.tet.tet_app.redis.service.TempUserService;
 import com.tet.tet_app.service.AuthService;
 import com.tet.tet_app.service.EmailVerificationService;
@@ -15,6 +16,7 @@ import com.tet.tet_app.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -27,10 +29,25 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthenticationController {
 
+    @Value("${app.cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site}")
+    private String sameSite;
+
+    @Value("${app.cookie.path}")
+    private String cookiePath;
+
+    @Value("${app.cookie.max-age}")
+    private long cookieMaxAge;
+
+
     private final UserService userService;
     private final EmailVerificationService emailVerificationService;
     private final AuthService authService;
     private final TempUserService tempUserService;
+    private final RateLimitService rateLimitService;
+
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody RegisterRequest request) {
@@ -110,20 +127,36 @@ public class AuthenticationController {
     }
 
     @PostMapping("/resend-code")
-    public ResponseEntity<ApiResponse<Void>> resendCode(@RequestBody ResendCodeRequest request) {
+    public ResponseEntity<ApiResponse<Void>> resendCode(
+            @RequestBody ResendCodeRequest request) {
+
+        String email = request.getEmail();
+        String rateLimitKey = "resend:" + email;
+
+        // ❌ BỊ RATE LIMIT
+        if (!rateLimitService.isAllowed(rateLimitKey, 60)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(new ApiResponse<>(
+                            false,
+                            "Vui lòng chờ 60 giây trước khi gửi lại mã xác thực",
+                            null
+                    ));
+        }
 
         try {
-            TempUser tempUser = tempUserService.getTempUser(request.getEmail());
-
+            TempUser tempUser = tempUserService.getTempUser(email);
             if (tempUser == null) {
                 return ResponseEntity.badRequest()
-                        .body(new ApiResponse<>(false, "Phiên đăng ký không tồn tại hoặc đã hết hạn", null));
+                        .body(new ApiResponse<>(
+                                false,
+                                "Phiên đăng ký không tồn tại hoặc đã hết hạn",
+                                null
+                        ));
             }
 
-            String newCode = emailVerificationService.createVerificationCode(request.getEmail());
-
+            String newCode = emailVerificationService.createVerificationCode(email);
             emailVerificationService.sendVerificationEmailAsync(
-                    request.getEmail(),
+                    email,
                     newCode,
                     tempUser.getFullName()
             );
@@ -133,12 +166,16 @@ public class AuthenticationController {
             );
 
         } catch (Exception e) {
-            log.error("Lỗi khi gửi lại mã: {}", e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Không thể gửi lại mã. Vui lòng thử lại.", null));
+            log.error("Lỗi resend code: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                            false,
+                            "Không thể gửi lại mã. Vui lòng thử lại",
+                            null
+                    ));
         }
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
@@ -153,13 +190,15 @@ public class AuthenticationController {
             );
 
             // Set refresh token vào HTTP-only cookie
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+            ResponseCookie refreshCookie = ResponseCookie.from(
+                            "refresh_token", authResponse.getRefreshToken())
                     .httpOnly(true)
-                    .secure(false)        // ✅ Đổi từ true → false (vì local không dùng HTTPS)
-                    .path("/api/auth")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")     // ✅ Đổi từ "Strict" → "Lax" hoặc bỏ dòng này
+                    .secure(cookieSecure)
+                    .sameSite(sameSite)
+                    .path(cookiePath)
+                    .maxAge(cookieMaxAge)
                     .build();
+
 
             response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
@@ -228,8 +267,8 @@ public class AuthenticationController {
             // Xóa cookie
             ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
                     .httpOnly(true)
-                    .secure(false)        // ✅ Đổi từ true → false
-                    .path("/api/auth")
+                    .secure(cookieSecure)
+                    .path(cookiePath)
                     .maxAge(0)
                     .build();
 

@@ -1,11 +1,14 @@
 package com.tet.tet_app.service;
 
+import com.tet.tet_app.dto.request.ChangePasswordRequest;
 import com.tet.tet_app.dto.response.UserResponse;
+import com.tet.tet_app.entity.House;
 import com.tet.tet_app.entity.Role;
 import com.tet.tet_app.entity.User;
 import com.tet.tet_app.entity.Wallet;
 import com.tet.tet_app.redis.model.TempUser;
 import com.tet.tet_app.redis.service.TempUserService;
+import com.tet.tet_app.repository.HouseRepository;
 import com.tet.tet_app.repository.RoleRepository;
 import com.tet.tet_app.repository.UserRepository;
 import com.tet.tet_app.repository.WalletRepository;
@@ -15,9 +18,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.tet.tet_app.dto.response.UserCheckResponse;
+import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +36,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
     private final TempUserService tempUserService;
+    private final HouseRepository houseRepository;
 
     @Transactional
     public void registerUser(String email, String password, String fullName) {
@@ -50,6 +57,7 @@ public class UserService {
 
         // Lưu user tạm 15 phút
         tempUserService.saveTempUser(tempUser, 15);
+
 
         String code = emailVerificationService.createVerificationCode(email);
 
@@ -81,6 +89,13 @@ public class UserService {
                 .balance(100)
                 .build();
         walletRepository.save(wallet);
+
+        House house = House.builder()
+                .user(user)
+                .shareToken(UUID.randomUUID().toString())
+                .build();
+
+        houseRepository.save(house);
 
         return user;
     }
@@ -116,6 +131,13 @@ public class UserService {
                     .balance(100)
                     .build();
             walletRepository.save(wallet);
+
+            House house = House.builder()
+                    .user(user)
+                    .shareToken(UUID.randomUUID().toString())
+                    .build();
+
+            houseRepository.save(house);
 
             return user;
         }
@@ -162,6 +184,50 @@ public class UserService {
         return mapToResponse(saved);
     }
 
+    public UserCheckResponse checkEmailExact(String email) {
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return new UserCheckResponse(
+                    false,
+                    false,
+                    null,
+                    null
+            );
+        }
+
+        User user = userOpt.get();
+
+        return new UserCheckResponse(
+                true,
+                user.getIsActive(),
+                user.getFullName(),
+                user.getAvatarUrl()
+        );
+    }
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        if (!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new RuntimeException("Mật khẩu cũ không đúng");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng mật khẩu cũ");
+        }
+        // ✅ mã hoá mật khẩu mới
+        user.setPasswordHash(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+
+        userRepository.save(user);
+    }
+
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
@@ -176,5 +242,8 @@ public class UserService {
                 )
                 .build();
     }
+
+
+
 
 }

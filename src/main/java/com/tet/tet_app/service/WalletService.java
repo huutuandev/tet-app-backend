@@ -7,7 +7,10 @@ import com.tet.tet_app.entity.WalletTransaction;
 import com.tet.tet_app.repository.WalletRepository;
 import com.tet.tet_app.repository.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,15 +26,22 @@ public class WalletService {
         return walletRepository.findTopLeaderboard(PageRequest.of(0, 10));
     }
 
-    public List<WalletTransactionResponse> getTransactions(User user) {
+    public Page<WalletTransactionResponse> getTransactions(
+            User user,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
 
-        List<WalletTransaction> transactions =
-                transactionRepository.findByUserIdOrderByCreatedAtDesc(
-                        user.getId()
-                );
+        Page<WalletTransaction> transactions =
+                transactionRepository.findByUserId(user.getId(), pageable);
 
-        return transactions.stream()
-                .map(tx -> WalletTransactionResponse.builder()
+        return transactions.map(tx ->
+                WalletTransactionResponse.builder()
                         .id(tx.getId())
                         .userId(tx.getUserId())
                         .amount(tx.getAmount())
@@ -39,9 +49,22 @@ public class WalletService {
                         .description(tx.getDescription())
                         .createdAt(tx.getCreatedAt())
                         .build()
-                )
-                .toList();
+        );
     }
 
+
+    public WalletTransactionResponse getTransactionById(Long id, User user){
+        WalletTransaction walletTransaction = transactionRepository
+                .findByIdAndUserId(id, user.getId()).orElseThrow(()->
+                        new RuntimeException("Không tìm thấy gaio dịch"));
+        return WalletTransactionResponse.builder()
+                .id(walletTransaction.getId())
+                .userId(walletTransaction.getUserId())
+                .amount(walletTransaction.getAmount())
+                .type(walletTransaction.getType())
+                .description(walletTransaction.getDescription())
+                .createdAt(walletTransaction.getCreatedAt())
+                .build();
+    }
 }
 

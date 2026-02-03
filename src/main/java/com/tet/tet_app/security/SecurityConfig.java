@@ -48,7 +48,9 @@ public class SecurityConfig {
                                     "/login/oauth2/**",
                                     "/api/shop/items",
                                     "/api/uploads/**",
-                                    "/api/images/**"
+                                    "/api/images/**",
+                                    "/api/wishes/share/**",
+                                    "/api/house/share/**"
                             ).permitAll()
 
                             .requestMatchers(
@@ -59,7 +61,7 @@ public class SecurityConfig {
                                     "/api/house/me",
                                     "/api/house/place",
                                     "/api/house/**"
-                            ).hasRole("USER")
+                            ).hasAnyRole("USER", "ADMIN")
 
                             .anyRequest().authenticated()
                     )

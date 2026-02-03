@@ -3,15 +3,20 @@ package com.tet.tet_app.service;
 import com.tet.tet_app.dto.request.WishCreateRequest;
 import com.tet.tet_app.dto.request.WishUpdateRequest;
 import com.tet.tet_app.dto.response.WishResponse;
+import com.tet.tet_app.entity.User;
 import com.tet.tet_app.entity.Wish;
+import com.tet.tet_app.repository.UserRepository;
 import com.tet.tet_app.repository.WishRepository;
 import com.tet.tet_app.security.user.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Service
@@ -19,14 +24,32 @@ import java.util.UUID;
 public class WishService {
 
     private final WishRepository wishRepository;
+    private final UserRepository userRepository;
 
     // ✅ CREATE
     public WishResponse createWish(
             CustomUserDetails currentUser,
             WishCreateRequest request
     ) {
+        Long userId = currentUser.getUser().getId();
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        int createdToday = wishRepository
+                .countBySenderIdAndCreatedAtBetween(
+                        userId,
+                        startOfDay,
+                        endOfDay
+                );
+
+        if (createdToday >= 3) {
+            throw new RuntimeException("Bạn chỉ được tạo tối đa 3 thiệp mỗi ngày 🎋");
+        }
+
         Wish wish = Wish.builder()
-                .senderId(currentUser.getUser().getId())
+                .senderId(userId)
                 .receiverId(request.getReceiverId())
                 .content(request.getContent())
                 .isPrivate(request.getIsPrivate())
@@ -40,6 +63,8 @@ public class WishService {
 
         return toResponse(wishRepository.save(wish));
     }
+
+
 
     // 📤 SENT
     public Page<WishResponse> getSent(Long userId, Pageable pageable) {
@@ -156,4 +181,12 @@ public class WishService {
                 .createdAt(wish.getCreatedAt())
                 .build();
     }
+
+    public String getSenderName(Long senderId) {
+        User user = userRepository.findById(senderId)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người gửi"));
+        return user.getFullName();
+    }
+
+
 }

@@ -3,6 +3,7 @@ package com.tet.tet_app.controller;
 import com.tet.tet_app.dto.request.PlaceItemRequest;
 import com.tet.tet_app.dto.response.ApiResponse;
 import com.tet.tet_app.dto.response.InventoryItemResponse;
+import com.tet.tet_app.entity.User;
 import com.tet.tet_app.security.user.CustomUserDetails;
 import com.tet.tet_app.service.HouseService;
 import lombok.RequiredArgsConstructor;
@@ -31,21 +32,6 @@ public class HouseController {
                 new ApiResponse<>(
                         true,
                         "Lấy thông tin nhà thành công",
-                        house
-                )
-        );
-    }
-
-    // 👀 Xem nhà người khác (share)
-    @GetMapping("/by-id/{userId}")
-    public ResponseEntity<ApiResponse<?>> userHouseById(@PathVariable Long userId) {
-
-        var house = houseService.getUserHouseById(userId);
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Lấy thông tin nhà theo ID thành công",
                         house
                 )
         );
@@ -85,18 +71,21 @@ public class HouseController {
         houseService.removeDecoration(userDetails.getUser(), decorationId);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/{slug}")
-    public ResponseEntity<ApiResponse<?>> publicHouse(@PathVariable String slug) {
 
-        var house = houseService.getUserHouseBySlug(slug);
+    @GetMapping("/share/{token}")
+    public ResponseEntity<?> shareHouse(@PathVariable String token) {
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Đã lấy nhà thành công !", houseService.getHouseByShareToken(token)));
+
+    }
+
+    @GetMapping("/my/share-token")
+    public ResponseEntity<?> getMyShareToken(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
         return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Lấy thông tin nhà theo slug thành công",
-                        house
-                )
-        );
+                new ApiResponse<>(true, "Đã lấy share token thành công !", houseService.getMyShareToken(userDetails.getUser())));
     }
+
+
 
 }

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -61,6 +62,7 @@ public class ShopService {
                     .amount(-item.getPrice())
                     .type("shop")
                     .description("Mua vật phẩm: " + item.getName())
+                    .createdAt(LocalDateTime.now())
                     .build();
             walletTransactionRepository.save(transaction);
         }

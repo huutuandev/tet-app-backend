@@ -2,14 +2,8 @@ package com.tet.tet_app.service;
 
 import com.tet.tet_app.dto.request.PlaceItemRequest;
 import com.tet.tet_app.dto.response.HouseDecorationResponse;
-import com.tet.tet_app.entity.HouseDecoration;
-import com.tet.tet_app.entity.ShopItem;
-import com.tet.tet_app.entity.User;
-import com.tet.tet_app.entity.UserItem;
-import com.tet.tet_app.repository.HouseDecorationRepository;
-import com.tet.tet_app.repository.ShopItemRepository;
-import com.tet.tet_app.repository.UserItemRepository;
-import com.tet.tet_app.repository.UserRepository;
+import com.tet.tet_app.entity.*;
+import com.tet.tet_app.repository.*;
 import com.tet.tet_app.until.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,65 +15,85 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HouseService {
 
+    private final HouseRepository houseRepository;
     private final HouseDecorationRepository houseDecorationRepository;
     private final UserItemRepository userItemRepository;
-    private final UserRepository userRepository;
     private final ShopItemRepository shopItemRepository;
 
-    // 🏠 Nhà của mình
+    /* =========================
+       🏠 NHÀ CỦA MÌNH
+       ========================= */
+    @Transactional(readOnly = true)
     public List<HouseDecorationResponse> getMyHouse(User user) {
-        return houseDecorationRepository.findHouseByUser(user.getId());
+
+        House house = houseRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Nhà không tồn tại"));
+
+        return mapDecorations(house.getDecorations());
     }
 
-    // 👀 Xem nhà người khác (ID)
-    public List<HouseDecorationResponse> getUserHouseById(Long userId) {
-        return houseDecorationRepository.findHouseByUser(userId);
+    /* =========================
+       👀 XEM NHÀ NGƯỜI KHÁC (SHARE TOKEN)
+       ========================= */
+    @Transactional(readOnly = true)
+    public List<HouseDecorationResponse> getHouseByShareToken(String token) {
+
+        House house = houseRepository.findByShareToken(token)
+                .orElseThrow(() -> new RuntimeException("Nhà không tồn tại"));
+
+        return mapDecorations(house.getDecorations());
     }
 
-    // ➕ ĐẶT ITEM VÀO NHÀ
-    // ➕ ĐẶT ITEM VÀO NHÀ (và trừ inventory)
+    /* =========================
+       ➕ ĐẶT ITEM VÀO NHÀ
+       ========================= */
     @Transactional
     public void placeItem(User user, PlaceItemRequest request) {
 
+        House house = houseRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Nhà không tồn tại"));
+
         Long itemId = request.getItemId();
 
-        // 1️⃣ Kiểm tra và trừ 1 quantity trong inventory
-        UserItem userItem = userItemRepository.findByUserIdAndItemId(user.getId(), itemId)
+        // 1️⃣ Kiểm tra inventory
+        UserItem userItem = userItemRepository
+                .findByUserIdAndItemId(user.getId(), itemId)
                 .orElseThrow(() -> new RuntimeException("Bạn chưa sở hữu vật phẩm này"));
 
         if (userItem.getQuantity() <= 0) {
-            throw new RuntimeException("Không đủ số lượng vật phẩm trong kho");
+            throw new RuntimeException("Không đủ số lượng vật phẩm");
         }
 
+        // 2️⃣ Trừ inventory
         userItem.setQuantity(userItem.getQuantity() - 1);
-        userItemRepository.save(userItem);
+        if (userItem.getQuantity() == 0) {
+            userItemRepository.delete(userItem);
+        }
 
-//         Nếu quantity về 0, có thể xóa record (tùy thiết kế)
-         if (userItem.getQuantity() == 0) {
-             userItemRepository.delete(userItem);
-         }
-
-        // 2️⃣ Tạo bản ghi đặt trong nhà
+        // 3️⃣ Đặt decoration
         HouseDecoration decoration = HouseDecoration.builder()
-                .userId(user.getId())
+                .house(house)
                 .itemId(itemId)
                 .posX(request.getPosX())
                 .posY(request.getPosY())
                 .zIndex(request.getZIndex())
                 .build();
 
-        houseDecorationRepository.save(decoration);
+        house.getDecorations().add(decoration);
+        // ❗ KHÔNG cần save decoration (cascade)
     }
 
-    // ✏️ CẬP NHẬT VỊ TRÍ
+    /* =========================
+       ✏️ CẬP NHẬT VỊ TRÍ
+       ========================= */
     @Transactional
-    public void updateDecoration(User user, Long decorationId,
-                                 PlaceItemRequest request) {
+    public void updateDecoration(User user, Long decorationId, PlaceItemRequest request) {
 
         HouseDecoration decoration = houseDecorationRepository.findById(decorationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy decoration"));
 
-        if (!decoration.getUserId().equals(user.getId())) {
+        // check ownership
+        if (!decoration.getHouse().getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Không có quyền sửa nhà người khác");
         }
 
@@ -88,64 +102,53 @@ public class HouseService {
         decoration.setZIndex(request.getZIndex());
     }
 
-    // ❌ GỠ ITEM KHỎI NHÀ
+    /* =========================
+       ❌ GỠ ITEM KHỎI NHÀ
+       ========================= */
     @Transactional
     public void removeDecoration(User user, Long decorationId) {
 
         HouseDecoration decoration = houseDecorationRepository.findById(decorationId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy vật phẩm trong nhà"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy decoration"));
 
-        if (!decoration.getUserId().equals(user.getId())) {
+        House house = decoration.getHouse();
+
+        if (!house.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Không có quyền sửa nhà người khác");
         }
 
         Long itemId = decoration.getItemId();
 
         // 1️⃣ Xóa khỏi nhà
-        houseDecorationRepository.delete(decoration);
+        house.getDecorations().remove(decoration);
 
-        // 2️⃣ Trả lại inventory (+1 quantity)
+        // 2️⃣ Trả lại inventory
         userItemRepository.findByUserIdAndItemId(user.getId(), itemId)
                 .ifPresentOrElse(
-                        item -> {
-                            item.setQuantity(item.getQuantity() + 1);
-                            userItemRepository.save(item);
-                        },
-                        () -> {
-                            // Trường hợp hiếm (fallback)
-                            UserItem newItem = UserItem.builder()
-                                    .userId(user.getId())
-                                    .itemId(itemId)
-                                    .quantity(1)
-                                    .build();
-                            userItemRepository.save(newItem);
-                        }
+                        item -> item.setQuantity(item.getQuantity() + 1),
+                        () -> userItemRepository.save(
+                                UserItem.builder()
+                                        .userId(user.getId())
+                                        .itemId(itemId)
+                                        .quantity(1)
+                                        .build()
+                        )
                 );
     }
 
-    public List<HouseDecorationResponse> getUserHouseBySlug(String slug) {
+    /* =========================
+       🔁 MAP DECORATION → RESPONSE
+       ========================= */
+    private List<HouseDecorationResponse> mapDecorations(List<HouseDecoration> decorations) {
 
-        // 1️⃣ Tách userId từ slug
-        Long userId = extractUserId(slug);
-
-        // 2️⃣ Lấy user
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-
-        // 3️⃣ (OPTIONAL) Check slug có đúng full_name không
-        String expectedSlug = SlugUtil.toSlug(user.getFullName()) + "-" + userId;
-        if (!expectedSlug.equals(slug)) {
-            throw new RuntimeException("Link nhà không hợp lệ");
-        }
-
-        // 4️⃣ Lấy danh sách decoration
-        return houseDecorationRepository.findHouseByUser(userId)
-                .stream()
+        return decorations.stream()
                 .map(deco -> {
                     ShopItem item = shopItemRepository.findById(deco.getItemId())
                             .orElseThrow();
 
                     return HouseDecorationResponse.builder()
+                            .decorationId(deco.getId())
+                            .itemId(item.getId())
                             .itemId(item.getId())
                             .name(item.getName())
                             .imageUrl(item.getImageUrl())
@@ -156,13 +159,11 @@ public class HouseService {
                 })
                 .toList();
     }
-
-    private Long extractUserId(String slug) {
-        try {
-            String[] parts = slug.split("-");
-            return Long.parseLong(parts[parts.length - 1]);
-        } catch (Exception e) {
-            throw new RuntimeException("Slug không hợp lệ");
-        }
+    public String getMyShareToken(User user) {
+        House house = houseRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("User chưa có house"));
+        return house.getShareToken();
     }
+
 }
+

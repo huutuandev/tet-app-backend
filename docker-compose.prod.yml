@@ -5,18 +5,19 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"                     # ✅ KHÔNG lộ ra ngoài
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_started
-    mem_limit: 600M             # Max RAM cho app: 600MB
-    mem_reservation: 300M       # Soft reservation (tùy chọn)
-    memswap_limit: 600M         # Giới hạn swap = mem_limit → không swap ra disk
-    cpus: 1.0                  # Giới hạn 1 CPU core (tùy chọn)
-
+    mem_limit: 600M
+    mem_reservation: 300M
+    memswap_limit: 600M
+    cpus: 1.0
+    networks:
+      - tet-net
     volumes:
       - uploads:/uploads/images
 
@@ -46,6 +47,8 @@ services:
     mem_reservation: 400M
     memswap_limit: 800M
     cpus: 1.0
+    networks:
+      - tet-net
 
   redis:
     image: redis:7
@@ -56,7 +59,13 @@ services:
     mem_reservation: 100M
     memswap_limit: 400M
     cpus: 0.5
+    networks:
+      - tet-net
 
 volumes:
   mysql_prod:
   uploads:
+
+networks:
+  tet-net:
+    external: true

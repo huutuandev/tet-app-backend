@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/wishes")
 @RequiredArgsConstructor
@@ -111,6 +113,18 @@ public class WishController {
                         true,
                         "Xóa lời chúc thành công",
                         null
+                )
+        );
+    }
+
+    @GetMapping("/share/sender/{sender_id}")
+    public  ResponseEntity<?> getNameSender(@PathVariable Long sender_id){
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Lấy tên người gửi thành công",
+                        Map.of("fullName", wishService.getSenderName(sender_id))
                 )
         );
     }
