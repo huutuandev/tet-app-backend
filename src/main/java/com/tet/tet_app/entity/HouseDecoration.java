@@ -16,8 +16,9 @@ public class HouseDecoration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "house_id", nullable = false)
+    private House house;
 
     @Column(name = "item_id", nullable = false)
     private Long itemId;

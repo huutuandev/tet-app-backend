@@ -36,6 +36,10 @@ public class User {
     @Column(name = "google_id", length = 120)
     private String googleId;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -49,7 +53,13 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+
+
     // Quan hệ 1-1 với Wallet
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Wallet wallet;
+
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private House house;
 }
