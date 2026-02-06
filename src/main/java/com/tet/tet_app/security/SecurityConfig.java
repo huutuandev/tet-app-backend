@@ -60,7 +60,8 @@ public class SecurityConfig {
                                     "/api/shop/inventory",
                                     "/api/house/me",
                                     "/api/house/place",
-                                    "/api/house/**"
+                                    "/api/house/**",
+                                    "/api/tet-ai/**"
                             ).hasAnyRole("USER", "ADMIN")
 
                             .anyRequest().authenticated()

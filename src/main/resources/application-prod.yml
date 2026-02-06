@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate             # LẦN ĐẦU: update | ổn định rồi có thể chuyển validate
+      ddl-auto: validate        # LẦN ĐẦU: update | ổn định rồi chuyển validate
     show-sql: false
     open-in-view: false
     defer-datasource-initialization: true
@@ -18,7 +18,7 @@ spring:
 
   sql:
     init:
-      mode: always              # 🔥 để data.sql chạy (init ROLE)
+      mode: always              # cho data.sql chạy (init ROLE)
 
   data:
     redis:
@@ -37,6 +37,11 @@ spring:
         auth: true
         starttls.enable: true
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
   security:
     oauth2:
       client:
@@ -52,10 +57,6 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
-    servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 20MB
 
 server:
   port: 8080
@@ -88,3 +89,10 @@ app:
   upload:
     dir: ${UPLOAD_DIR:/uploads/images}
     public-url: ${UPLOAD_PUBLIC_URL:http://localhost:8080}
+
+ai:
+  provider: groq
+  api:
+    key: ${GROQ_API_KEY}
+    url: https://api.groq.com/openai/v1/chat/completions
+  model: ${AI_MODEL}
