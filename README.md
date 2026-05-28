@@ -27,10 +27,10 @@
 * Horoscope API
 
 ## Deploy
-
 * VPS Ubuntu
 * Docker
 * MySQL
 * Redis
-
+---
+### Author
 Tuấn
