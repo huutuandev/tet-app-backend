@@ -16,14 +16,14 @@ The system integrates advanced technologies such as **OpenAI API, Redis caching,
 ## 🏗️ System Architecture
 
 
-tet-app-backend
-├── config ⚙️ Security, OAuth2, JWT
-├── controller 🎮 REST APIs
-├── service 🧠 Business logic
-├── repository 💾 Database access
-├── entity 📦 Data models
-├── dto 🔄 Data transfer
-├── util 🔧 Utilities
+bash tet-app-backend 
+├── config ⚙️ Security, OAuth2, JWT 
+├── controller 🎮 API endpoints 
+├── service 🧠 Business logic 
+├── repository 💾 Database access 
+├── entity 📦 Data models 
+├── dto 🔄 Data transfer 
+├── util 🔧 Helper & tools
 
 
 ---
