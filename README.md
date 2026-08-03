@@ -73,7 +73,9 @@ The system is deployed in a **real production environment**:
 
 > 📌 Real users registered and verified via email system
 
-![User Logs](./assets/email-logs.png)
+![User Logs](./assets/email-logs-1.png)
+![User Logs](./assets/email-logs-2.png)
+![User Logs](./assets/email-logs-3.png)
 
 ---
 
