@@ -1,98 +1,108 @@
-# 🎋 Tet App Backend – Luxury API System
+# 🎋 Tet App Backend – AI-Powered Production System
 
-> 🚀 Backend hệ thống Tết hiện đại tích hợp AI, tối ưu hiệu năng và triển khai production trên VPS
-> 👑 Author: **Tuấn**
-
----
-
-## 🌸 Giới thiệu
-
-**Tet App Backend** là hệ thống backend được xây dựng bằng **Spring Boot**, cung cấp API cho ứng dụng Tết với trải nghiệm mượt mà, hiện đại và mang tính mở rộng cao.
-
-Hệ thống tích hợp nhiều công nghệ như **AI, Redis Cache, OAuth2**, giúp tối ưu hiệu năng và nâng cao trải nghiệm người dùng.
+> 🚀 Production-ready backend serving **200+ real users** and achieving **21K+ demo views**
+> 👑 Author: **Tuấn Nguyễn**
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
+## 🌸 Introduction
 
-```bash
+**Tet App Backend** is a **scalable AI-powered backend system** built with **Spring Boot**, designed to deliver a modern and high-performance Tet application experience.
+
+The system integrates advanced technologies such as **OpenAI API, Redis caching, and OAuth2 authentication**, ensuring **security, performance, and real-world usability**.
+
+---
+
+## 🏗️ System Architecture
+
+
 tet-app-backend
-├── config          ⚙️ Security, OAuth2, JWT
-├── controller      🎮 API endpoints
-├── service         🧠 Business logic
-├── repository      💾 Database access
-├── entity          📦 Data models
-├── dto             🔄 Data transfer
-├── util            🔧 Helper & tools
-```
+├── config ⚙️ Security, OAuth2, JWT
+├── controller 🎮 REST APIs
+├── service 🧠 Business logic
+├── repository 💾 Database access
+├── entity 📦 Data models
+├── dto 🔄 Data transfer
+├── util 🔧 Utilities
+
 
 ---
 
-## 🧩 Công nghệ sử dụng
+## 🧩 Technologies
 
-* ☕ **Spring Boot** – Core backend framework
-* 🔐 **Spring Security + JWT** – Authentication
-* 🔑 **OAuth2** – Social login
-* ⚡ **Redis** – Cache & performance
-* 💾 **MySQL** – Database
-* 🤖 **OpenAI API** – AI integration
-* 🐳 **Docker** – Containerization
-* 🖥️ **VPS Ubuntu** – Deployment môi trường production
-
----
-
-## ✨ Tính năng chính
-
-* 🔐 **JWT Authentication** – Xác thực bảo mật
-* 🌐 **OAuth2 Login** – Đăng nhập Google/Facebook
-* 🤖 **AI Integration** – Tích hợp AI xử lý dữ liệu
-* ⚡ **Redis Cache** – Tăng tốc hệ thống
-* 📤 **Upload File** – Quản lý file upload
-* 📧 **Async Email** – Gửi mail bất đồng bộ
-* 💰 **Wallet System** – Ví người dùng
-* 🏆 **Leaderboard** – Bảng xếp hạng
-* 🎲 **Lucky Draw** – Quay thưởng
-* 🔮 **Horoscope API** – Tử vi
+- ☕ **Spring Boot** – Backend framework  
+- 🔐 **Spring Security + JWT** – Authentication & Authorization  
+- 🔑 **OAuth2** – Social login  
+- ⚡ **Redis** – Caching & performance optimization  
+- 💾 **MySQL** – Database  
+- 🤖 **OpenAI API** – AI-powered features  
+- 🐳 **Docker** – Containerization  
+- 🖥️ **Ubuntu VPS** – Production deployment  
+- ⚛️ **React** – Frontend contribution  
 
 ---
 
-## 🚀 Deploy (Production Ready)
+## ✨ Key Features
 
-Hệ thống được triển khai theo mô hình thực tế:
-
-* 🖥️ **VPS Ubuntu** – Server chạy chính
-* 🐳 **Docker** – Quản lý container
-* 💾 **MySQL** – Lưu trữ dữ liệu
-* ⚡ **Redis** – Cache tốc độ cao
+- 🔐 **Secure Authentication** (JWT + OAuth2)  
+- 🤖 **AI Integration** for intelligent features  
+- ⚡ **Redis Caching** to improve system performance  
+- 📧 **Async Email Service** (email verification)  
+- 💰 **Wallet System**  
+- 🏆 **Leaderboard System**  
+- 🎲 **Lucky Draw Feature**  
+- 🔮 **Horoscope API**  
+- 📤 **File Upload Handling**  
 
 ---
 
-## ⚙️ Cài đặt & chạy local
+## 🚀 Deployment
+
+The system is deployed in a **real production environment**:
+
+- 🖥️ **Ubuntu VPS**
+- 🐳 **Docker containers**
+- 💾 **MySQL database**
+- ⚡ **Redis cache**
+
+---
+
+## 📊 Real Usage & Proof
+
+### 👥 User Activity (Email Verification Logs)
+
+> 📌 Real users registered and verified via email system
+
+![User Logs](./assets/email-logs.png)
+
+---
+
+### 🎥 Product Demo Performance
+
+> 📈 Strong engagement from real users
+
+- 👁️ **21,462 Views**
+- 👤 **16,167 Unique Viewers**
+- 👍 **113 Reactions**
+- 💬 **15 Comments**
+- 🔁 **11 Shares**
+
+![Video Insights](./assets/video-insights.png)
+
+---
+
+## 🚀 Impact
+
+- ✅ **200+ real users**
+- ✅ **21K+ demo views**
+- ✅ **Production deployment**
+- ✅ **End-to-end full-stack system**
+
+---
+
+## ⚙️ Run Locally
 
 ```bash
-git clone https://github.com/your-username/tet-app-backend.git
+git clone https://github.com/huutuandev/tet-app-backend.git
 cd tet-app-backend
 ./mvnw spring-boot:run
-```
-
----
-
-## 📌 Điểm nổi bật
-
-* 🚀 Kiến trúc rõ ràng, dễ mở rộng
-* ⚡ Hiệu năng cao với Redis
-* 🤖 Có tích hợp AI hiện đại
-* 🐳 Sẵn sàng deploy production với Docker
-* 🔐 Bảo mật đầy đủ (JWT + OAuth2)
-
----
-
-## 🧨 Quote
-
-> “Không chỉ là backend – đây là nền tảng cho một trải nghiệm Tết hiện đại.”
-
----
-
-## 📄 License
-
-MIT License
